@@ -8,6 +8,8 @@ import Dashboardik from "./components/Dashboard";
 import ChangePassword from "./components/ChangePassword";
 import ResetPassword from "./components/ResetPassword";
 import ResetPasswordEnterNew from "./components/ResetPasswordEnteNew";
+import UploadImage from "./components/UploadImage";
+import Tasks from "./components/Tasks";
 
 export async function hashPassword(password) {
 	const salt = bcrypt.genSaltSync(10);
@@ -30,6 +32,8 @@ function App() {
 						path="resetPasswordEnterCode"
 						element={<ResetPasswordEnterNew />}
 					/>
+					<Route path="uploadImage" element={<UploadImage />} />
+					<Route path="tasks" element={<Tasks />} />
 				</Routes>
 			</BrowserRouter>
 		</div>

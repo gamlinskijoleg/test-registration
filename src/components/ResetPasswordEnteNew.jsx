@@ -11,8 +11,7 @@ import {
 import { supabase } from "../supabaseClient";
 import { useNavigate } from "react-router-dom";
 
-const ResetPasswordEnterNew = (e) => {
-	e.preventDefault();
+const ResetPasswordEnterNew = () => {
 	const [password, setPassword] = useState("");
 	const [message, setMessage] = useState("");
 	const navigate = useNavigate();
