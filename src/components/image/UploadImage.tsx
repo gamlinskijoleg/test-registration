@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, ChangeEvent } from "react";
 import {
 	Button,
 	Container,
@@ -7,66 +7,65 @@ import {
 	LinearProgress,
 	Alert,
 	Paper,
-	Grid,
-	Stack,
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import useProtectedRoute from "../hooks/useProtectedRoute";
-import { supabase } from "../supabaseClient";
+import useProtectedRoute from "../../hooks/useProtectedRoute";
 import { useNavigate } from "react-router-dom";
+import supabaseTasks from "../../services/tasks";
+import supabaseUser from "../../services/auth";
 
 const UploadImage = () => {
 	useProtectedRoute();
 	const navigate = useNavigate();
+
 	const [uploading, setUploading] = useState(false);
-	const [messages, setMessages] = useState([]);
-	const [errors, setErrors] = useState([]);
-	const [userId, setUserId] = useState(null);
-	const fileInputRef = useRef(null);
+	const [messages, setMessages] = useState<string[]>([]);
+	const [errors, setErrors] = useState<string[]>([]);
+	const [userId, setUserId] = useState<string | null>(null);
+
+	const fileInputRef = useRef<HTMLInputElement | null>(null);
 
 	useEffect(() => {
 		const fetchUser = async () => {
-			const {
-				data: { user },
-				error,
-			} = await supabase.auth.getUser();
-			if (error || !user) return;
-			setUserId(user.id);
+			const { data, error } = await supabaseUser.GetUser();
+			if (error) {
+				console.error("Failed to get user:", error);
+				return;
+			}
+			if (data?.user?.id) {
+				setUserId(data.user.id);
+			}
 		};
 		fetchUser();
 	}, []);
 
-	const handleFileChange = async (event) => {
-		const files = Array.from(event.target.files);
+	const handleFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+		const files = event.target.files ? Array.from(event.target.files) : [];
 		if (files.length === 0 || !userId) return;
 
 		setUploading(true);
 		setMessages([]);
 		setErrors([]);
 
-		const newPreviews = [];
-		const newMessages = [];
-		const newErrors = [];
+		const newMessages: string[] = [];
+		const newErrors: string[] = [];
 
 		for (const file of files) {
 			const fileName = file.name;
 			const filePath = `user-${userId}/${fileName}`;
 
 			const { data: uploadData, error: uploadError } =
-				await supabase.storage.from("photos").upload(filePath, file);
+				await supabaseTasks.setPictureFileIntoStorage(filePath, file);
 
 			if (uploadError) {
 				newErrors.push(
 					`⚠️ ${file.name}: UPLOAD ERROR, ${uploadError.message}`
 				);
+				continue;
 			}
 
-			const { error: insertError } = await supabase
-				.from("photos")
-				.insert({
-					user_id: userId,
-					path: filePath,
-				});
+			const { error: insertError } =
+				await supabaseTasks.SetPictureInTable(userId, filePath);
 
 			if (insertError) {
 				newErrors.push(
@@ -75,12 +74,8 @@ const UploadImage = () => {
 				continue;
 			}
 
-			const { data: publicUrlData } = supabase.storage
-				.from("photos")
-				.getPublicUrl(filePath);
-
-			if (publicUrlData?.publicUrl) {
-				newPreviews.push(publicUrlData.publicUrl);
+			const { publicUrl } = supabaseTasks.getPublicUrl(filePath);
+			if (publicUrl) {
 				newMessages.push(`✅ ${file.name} uploaded.`);
 			}
 		}
@@ -112,9 +107,7 @@ const UploadImage = () => {
 					onClick={() => fileInputRef.current?.click()}
 					disabled={uploading || !userId}
 					fullWidth
-					sx={{
-						marginBottom: 2,
-					}}
+					sx={{ mb: 2 }}
 				>
 					{uploading ? "Uploading..." : "Select Images"}
 				</Button>
@@ -144,14 +137,13 @@ const UploadImage = () => {
 						))}
 					</Box>
 				)}
+
 				<Button
 					variant="outlined"
-					startIcon={<CloudUploadIcon />}
-					onClick={() => {
-						navigate("/dashboard");
-					}}
+					onClick={() => navigate("/dashboard")}
 					disabled={uploading || !userId}
 					fullWidth
+					startIcon={<CloudUploadIcon />}
 				>
 					Назад
 				</Button>

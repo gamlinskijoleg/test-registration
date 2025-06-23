@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 import {
 	Container,
 	Paper,
@@ -8,27 +8,23 @@ import {
 	Box,
 	Alert,
 } from "@mui/material";
-import { supabase } from "../supabaseClient";
+import supabaseUser from "../../../services/auth";
 import { useNavigate } from "react-router-dom";
 
 const ResetPassword = () => {
-	const [email, setEmail] = useState("");
-	const [message, setMessage] = useState("");
+	const [email, setEmail] = useState<string>("");
+	const [message, setMessage] = useState<string>("");
 	const navigate = useNavigate();
 
-	const handleChangePassword = async (e) => {
+	const handleChangePassword = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		const { data, error } = await supabase.auth.resetPasswordForEmail(
-			email,
-			{
-				redirectTo: "http://localhost:3000/resetPasswordEnterCode",
-			}
-		);
+
+		const { data, error } = await supabaseUser.resetPasswordForEmail(email);
 
 		if (error) {
 			setMessage(error.message);
 		} else {
-			setMessage("Password updated successfully!");
+			setMessage("Password reset email sent successfully!");
 			navigate("/dashboard");
 		}
 	};
@@ -47,6 +43,7 @@ const ResetPassword = () => {
 								? "success"
 								: "error"
 						}
+						sx={{ mt: 2 }}
 					>
 						{message}
 					</Alert>
@@ -81,4 +78,5 @@ const ResetPassword = () => {
 		</Container>
 	);
 };
+
 export default ResetPassword;

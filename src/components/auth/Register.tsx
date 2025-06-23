@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, ChangeEvent, FormEvent } from "react";
 import {
 	TextField,
 	Button,
@@ -6,70 +6,82 @@ import {
 	Typography,
 	Box,
 	Paper,
+	Alert,
+	Stack,
 } from "@mui/material";
-
 import { useNavigate, Link } from "react-router-dom";
-import { supabase } from "../supabaseClient";
+import supabaseUser from "../../services/auth";
 
 const RegisterForm = () => {
-	const [formData, setFormData] = useState({
+	const [formData, setFormData] = useState<{
+		name: string;
+		email: string;
+		password: string;
+		confirmPassword: string;
+	}>({
 		name: "",
 		email: "",
 		password: "",
 		confirmPassword: "",
 	});
 
-	const handleChange = (e) => {
-		setFormData({
-			...formData,
-			[e.target.name]: e.target.value,
-		});
+	const [error, setError] = useState<string>("");
+	const [success, setSuccess] = useState<string>("");
+
+	const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+		const { name, value } = e.target;
+		setFormData((prev) => ({
+			...prev,
+			[name]: value,
+		}));
+		setError("");
+		setSuccess("");
 	};
 
 	const isCorrectUser = () => {
 		const { name, email, password, confirmPassword } = formData;
 
-		if (
+		return (
 			password.length >= 6 &&
 			password === confirmPassword &&
-			name &&
-			email
-		) {
-			return true;
-		}
-		return false;
+			name.trim() !== "" &&
+			email.trim() !== ""
+		);
 	};
 
-	const handleSubmit = async (e) => {
-		const { name, email, password, confirmPassword } = formData;
+	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 
 		if (!isCorrectUser()) {
-			alert("review ur input");
+			setError("Please review your input.");
 			return;
 		}
 
-		const { data, error } = await supabase.auth.signUp({
-			email: email,
-			password: password,
-		});
+		const { email, password } = formData;
+		const { data, error } = await supabaseUser.Register(email, password);
 
 		if (error) {
 			console.error("Signup error:", error);
-		
+			setError("Signup failed: " + error.message);
+			setSuccess("");
 		} else {
-			alert("confirmation link sent!")
+			setSuccess("Confirmation link sent! Please check your email.");
+			setError("");
 		}
-		// navigate("/dashboard");
 	};
 
 	return (
 		<Container maxWidth="sm">
-			<Paper elevation={3} style={{ padding: 30, marginTop: 50 }}>
+			<Paper elevation={3} sx={{ padding: 4, marginTop: 6 }}>
 				<Typography variant="h5" gutterBottom>
 					Register
 				</Typography>
-				<Box component="form" onSubmit={handleSubmit} noValidate>
+				<Box
+					component="form"
+					onSubmit={handleSubmit}
+					noValidate
+					autoComplete="on"
+				>
 					<TextField
 						fullWidth
 						label="Name"
@@ -78,6 +90,7 @@ const RegisterForm = () => {
 						value={formData.name}
 						onChange={handleChange}
 						required
+						autoComplete="name"
 					/>
 					<TextField
 						fullWidth
@@ -85,9 +98,10 @@ const RegisterForm = () => {
 						name="email"
 						type="email"
 						margin="normal"
-						value={formData.surname}
+						value={formData.email}
 						onChange={handleChange}
 						required
+						autoComplete="email"
 					/>
 					<TextField
 						fullWidth
@@ -98,6 +112,7 @@ const RegisterForm = () => {
 						value={formData.password}
 						onChange={handleChange}
 						required
+						autoComplete="new-password"
 					/>
 					<TextField
 						fullWidth
@@ -108,13 +123,17 @@ const RegisterForm = () => {
 						value={formData.confirmPassword}
 						onChange={handleChange}
 						required
+						autoComplete="new-password"
 					/>
+					<Stack spacing={2} mt={2}>
+						{error && <Alert severity="error">{error}</Alert>}
+						{success && <Alert severity="success">{success}</Alert>}
+					</Stack>
 					<Button
 						type="submit"
 						fullWidth
 						variant="contained"
 						color="primary"
-						onClick={handleSubmit}
 						sx={{ marginTop: 2 }}
 					>
 						Register

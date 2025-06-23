@@ -1,42 +1,49 @@
-import { useEffect, useState } from "react";
+import { useState, ChangeEvent, FormEvent } from "react";
 import { TextField, Button, Container, Typography, Paper } from "@mui/material";
-import { supabase } from "../supabaseClient";
-import bcrypt from "bcryptjs";
 import { Link, useNavigate } from "react-router-dom";
-import useProtectedRoute from "../hooks/useProtectedRoute";
+import useProtectedRoute from "../../hooks/useProtectedRoute";
+import supabaseUser from "../../services/auth";
 
 const ChangePassword = () => {
 	const navigate = useNavigate();
 	useProtectedRoute();
 
-	const [formData, setFormData] = useState({
+	const [formData, setFormData] = useState<{ newPassword: string }>({
 		newPassword: "",
 	});
-	const [message, setMessage] = useState("");
+	const [errorMessage, setErrorMessage] = useState<string>("");
 
-	const handleChange = (e) => {
+	const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
 		setFormData((prev) => ({
 			...prev,
 			[name]: value,
 		}));
+		setErrorMessage("");
 	};
 
-	const handleSubmit = async (e) => {
+	const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		setMessage("");
+		setErrorMessage("");
 
 		if (!formData.newPassword) {
-			setMessage("Please fill in all fields.");
+			setErrorMessage("Please fill in the password.");
 			return;
 		}
 
-		const { data, error } = await supabase.auth.updateUser({
-			password: formData.newPassword,
-		});
+		if (formData.newPassword.length < 8) {
+			setErrorMessage("Password must be at least 8 characters.");
+			return;
+		}
+
+		const { error } = await supabaseUser.UpdateUserPassword(
+			formData.newPassword
+		);
 
 		if (!error) {
-			navigate("/dashboard");
+			navigate(-1);
+		} else {
+			setErrorMessage("Failed to update password.");
 		}
 	};
 
@@ -55,6 +62,8 @@ const ChangePassword = () => {
 						value={formData.newPassword}
 						onChange={handleChange}
 						margin="normal"
+						error={!!errorMessage}
+						helperText={errorMessage}
 					/>
 					<Button
 						type="submit"
@@ -64,16 +73,11 @@ const ChangePassword = () => {
 					>
 						Update Password
 					</Button>
-					{message && (
-						<Typography color="textSecondary" sx={{ mt: 2 }}>
-							{message}
-						</Typography>
-					)}
 				</form>
 			</Paper>
 			<Button
 				component={Link}
-				to="/"
+				to="/dashboard"
 				sx={{ position: "relative", marginTop: 5 }}
 			>
 				Back

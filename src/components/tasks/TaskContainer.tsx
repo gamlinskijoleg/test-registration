@@ -1,6 +1,12 @@
 import { useDroppable } from "@dnd-kit/core";
+import { ReactNode } from "react";
 
-export default function TaskContainer({ id, children }) {
+interface TaskContainerProps {
+	id: string;
+	children: ReactNode;
+}
+
+export default function TaskContainer({ id, children }: TaskContainerProps) {
 	const { isOver, setNodeRef } = useDroppable({ id });
 
 	return (
@@ -17,5 +23,3 @@ export default function TaskContainer({ id, children }) {
 		</div>
 	);
 }
-
-

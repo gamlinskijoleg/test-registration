@@ -1,13 +1,10 @@
-import { Outlet, Link, Route, Routes, useNavigate } from "react-router-dom";
+import { Outlet, Link, useNavigate } from "react-router-dom";
 import { Box, Button, Typography, Stack } from "@mui/material";
 import LoginIcon from "@mui/icons-material/Login";
 import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
 
 const Home = () => {
 	const navigate = useNavigate();
-	const reset = () => {
-		navigate("/");
-	};
 
 	return (
 		<>

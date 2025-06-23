@@ -1,21 +1,14 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./App.css";
-import Home from "./components/Home";
-import Login from "./components/Login";
-import RegisterForm from "./components/Register";
-import bcrypt from "bcryptjs";
-import Dashboardik from "./components/Dashboard";
-import ChangePassword from "./components/ChangePassword";
-import ResetPassword from "./components/ResetPassword";
-import ResetPasswordEnterNew from "./components/ResetPasswordEnteNew";
-import UploadImage from "./components/UploadImage";
-import Tasks from "./components/Tasks";
-
-export async function hashPassword(password) {
-	const salt = bcrypt.genSaltSync(10);
-	const hash = bcrypt.hashSync(password, salt);
-	return hash;
-}
+import Home from "./components/home/Home";
+import Login from "./components/auth/Login";
+import RegisterForm from "./components/auth/Register";
+import Dashboardik from "./components/dashboard/Dashboard";
+import ChangePassword from "./components/auth/ChangePassword";
+import ResetPassword from "./components/auth/resetPassword/ResetPassword";
+import ResetPasswordEnterNew from "./components/auth/resetPassword/ResetPasswordEnteNew";
+import UploadImage from "./components/image/UploadImage";
+import Tasks from "./components/tasks/Tasks";
 
 function App() {
 	return (

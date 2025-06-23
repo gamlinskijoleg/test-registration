@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, FormEvent } from "react";
 import {
 	Container,
 	Paper,
@@ -8,20 +8,17 @@ import {
 	Box,
 	Alert,
 } from "@mui/material";
-import { supabase } from "../supabaseClient";
+import supabaseUser from "../../../services/auth";
 import { useNavigate } from "react-router-dom";
 
 const ResetPasswordEnterNew = () => {
-	const [password, setPassword] = useState("");
-	const [message, setMessage] = useState("");
+	const [password, setPassword] = useState<string>("");
+	const [message, setMessage] = useState<string>("");
 	const navigate = useNavigate();
 
-	const handleVerify = async (e) => {
+	const handleVerify = async (e: FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
-		const { data, error } = await supabase.auth.updateUser({
-			password: password,
-		});
-
+		const { data, error } = await supabaseUser.UpdateUserPassword(password);
 		if (error) {
 			setMessage(error.message);
 		} else {
@@ -51,6 +48,7 @@ const ResetPasswordEnterNew = () => {
 					<TextField
 						fullWidth
 						label="Password"
+						type="password"
 						value={password}
 						onChange={(e) => setPassword(e.target.value)}
 						margin="normal"
